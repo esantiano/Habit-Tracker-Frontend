@@ -85,4 +85,19 @@ export const api = {
                 },
                 body: JSON.stringify(payload),
             }),
+
+        createHabit: (payload: {
+            name: string;
+            description?: string;
+            goal_type: "DAILY" | "WEEKLY" | "X_PER_WEEK",
+            target_per_period: number;
+            start_date: string;
+        }) => 
+            request("/habits/", {
+                method: "POST",
+                headers: {
+                    'Content-Type' : 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
 };
