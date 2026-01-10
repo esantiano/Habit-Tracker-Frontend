@@ -10,6 +10,11 @@ export default function DashboardPage() {
         queryFn: api.dashboardToday,
     });
 
+    const {data: allHabits } = useQuery({
+        queryKey: ["habits", "include-archived"],
+        queryFn: () => api.listHabits(true)
+    });
+    
     const createHabitMutation = useMutation({
         mutationFn: (payload: {
             name: string;
@@ -56,8 +61,17 @@ export default function DashboardPage() {
         }
     });
 
+    const restoreMutation = useMutation({
+        mutationFn: (habitId: number) => api.restoreHabit(habitId),
+        onSuccess: async () => {
+            await qc.invalidateQueries({ queryKey: ["dashboard-today"]})
+            await qc.invalidateQueries({ queryKey: ["habits", "include-archived"]});
+        },
+    });
+    
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [showArchived, setShowArchived] = useState(false);
 
     if (isLoading) return <div>Loading dashboard...</div>;
     if (error) return <pre style={{ color: "crimson", whiteSpace: "pre-wrap"}}>{String(error)}</pre>;
@@ -80,6 +94,8 @@ export default function DashboardPage() {
         setName("")
         setDescription("")
     }
+    
+    const archived = (allHabits || []).filter((h) => h.is_archived);
     return (
         <div>
             <h2>Today</h2>
@@ -176,7 +192,49 @@ export default function DashboardPage() {
                     </div>
                 ))}
             </div>
+            
+            <hr style={{ margin: "20px 0"}}/>
+            <button onClick={() => setShowArchived((s) => !s)}>
+                {showArchived ? "Hide archived habits" : "Show archived habits"}    
+            </button>
+            
+            {showArchived && (
+                <div style={{marginTop: 20}}>
+                    <h3 style={{marginBottom: 8}}>Archived habits</h3>
+                    {archived.length === 0 ? (
+                        <div style={{ opacity: 0.8 }}>No archived habits.</div>
+                    ) : (
+                    <div style={{ display: "grid", gap: 10}}>
+                        {archived.map((h) => (
+                            <div
+                                key={h.id}
+                                style={{
+                                    border: "1px solid #ddd",
+                                    borderRadius: 8,
+                                    padding: 12,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 12,
+                                    opacity: 0.9,
+                                }}
+                            >
+                                <div style={{ flex: 1}}>
+                                    <div style={{ fontWeight: 700}}>{h.name}</div>
+                                    {h.description && (
+                                        <div style={{ fontSize: 14, opacity: 0.8}}>{h.description}</div>
+                                    )}
+                                </div>
 
+                                <button
+                                    onClick={() => restoreMutation.mutate(h.id)}
+                                    disabled={restoreMutation.isPending}>
+                                    Restore
+                                </button>
+                            </div>
+                        ))}
+                    </div>)}
+                </div>
+            )}
             {data.habits.length === 0 && <div>No active habits yet. Create some via the API for now.</div>}
         </div>
     )

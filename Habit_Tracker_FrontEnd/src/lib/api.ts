@@ -110,5 +110,18 @@ export const api = {
         archiveHabit: (habitId: number) => 
             request<void>(`/habits/${habitId}`, {
                 method: "DELETE"
-            })
+            }),
+
+        listHabits: (includeArchived = false) =>
+            request<Array<{
+                id: number;
+                name: string;
+                description: string;
+                goal_type: string;
+                is_archived: boolean;
+                created_at: string;
+            }>>(`/habits/?include_archived=${includeArchived}`),
+
+        restoreHabit: (habitId: number) =>
+            request(`/habits/${habitId}/restore`,{ method: "PATCH"}),
 };
