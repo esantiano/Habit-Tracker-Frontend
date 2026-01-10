@@ -12,16 +12,13 @@ async function request<T>(
         ...(options.headers as Record<string,string> | undefined),
     };
 
-    if (!headers["Content-Type"] && options.body && typeof options.body === "string") {
-        //placeholder -- caller set body manually
-    } else if (!headers["Content-Type"] && options.body) {
-        headers["Content-Type"] = "applications/json";
-    }
-
     if (token) {
         headers["Authorization"] = `Bearer ${token}`;
     }
 
+    if (options.body && !headers["Content-Type"]) {
+        headers["Content-Type"] = "application/jdon"
+    }
     const res = await fetch(`${API_URL}${path}`, {
         ...options,
         headers,
@@ -32,7 +29,16 @@ async function request<T>(
         throw new Error(text || `Request failed: ${res.status}`);
     }
 
-    return res.json() as Promise<T>;
+    if (res.status === 204) {
+        return undefined as T;
+    }
+
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+        return (await res.text()) as unknown as T;
+    }
+
+    return (await res.json()) as T;
 }
 
 export const api = {
@@ -99,5 +105,10 @@ export const api = {
                     'Content-Type' : 'application/json'
                 },
                 body: JSON.stringify(payload)
+            }),
+        
+        archiveHabit: (habitId: number) => 
+            request<void>(`/habits/${habitId}`, {
+                method: "DELETE"
             })
 };

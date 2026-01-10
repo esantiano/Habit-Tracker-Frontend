@@ -31,6 +31,31 @@ export default function DashboardPage() {
         },
     });
 
+    const archiveMutation = useMutation({
+        mutationFn: (habitId: number) => api.archiveHabit(habitId),
+        onMutate: async (habitId: number) => {
+            await qc.cancelQueries({ queryKey: ["dashboard-today"]});
+
+            const previous = qc.getQueryData<unknown>(["dashboard-today"]);
+
+            qc.setQueryData(["dashboard-today"], (old: unknown) => {
+                if (!old) return old;
+                return {
+                    ...old,
+                    habits: old.habits.filter((h:unknown) => h.habit.it !== habitId),
+                };
+            });
+
+            return {previous}
+        },
+        onError: (_err, _habitId, ctx) => {
+            if (ctx?.previous) qc.setQueryData(["dashboard-today"], ctx.previous);
+        },
+        onSettled: async () => {
+            await qc.invalidateQueries({ queryKey: ["dashboard-today"]});
+        }
+    });
+
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
 
@@ -137,6 +162,17 @@ export default function DashboardPage() {
                                     Mark done
                             </button>
                         )}
+
+                        <button
+                            onClick={() => {
+                                const ok = confirm(`Archive "${item.habit.name}?`)
+                                if (ok) archiveMutation.mutate(item.habit.id)
+                            }}
+                            disabled={archiveMutation.isPending}
+                            style={{ opacity: 0.8}}
+                        >
+                            Archive
+                        </button>
                     </div>
                 ))}
             </div>
