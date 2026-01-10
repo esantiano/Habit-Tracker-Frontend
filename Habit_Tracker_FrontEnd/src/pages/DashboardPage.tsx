@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react"
 import { api } from "../lib/api"
@@ -38,26 +39,43 @@ export default function DashboardPage() {
 
     const archiveMutation = useMutation({
         mutationFn: (habitId: number) => api.archiveHabit(habitId),
+        
         onMutate: async (habitId: number) => {
             await qc.cancelQueries({ queryKey: ["dashboard-today"]});
+            await qc.cancelQueries({ queryKey: ["habits","include-archived"]});
 
-            const previous = qc.getQueryData<unknown>(["dashboard-today"]);
+            const prevDashboard = qc.getQueryData<any>(["dashboard-today"]);
+            const prevHabits = qc.getQueryData<any>(["habits", "include-archived"]);
 
-            qc.setQueryData(["dashboard-today"], (old: unknown) => {
-                if (!old) return old;
-                return {
-                    ...old,
-                    habits: old.habits.filter((h:unknown) => h.habit.it !== habitId),
-                };
-            });
+            if (prevDashboard) {
+            qc.setQueryData(["dashboard-today"], {
+                ...prevDashboard,
+                habits: prevDashboard.habits.filter((h:any) => h.habit.id !== habitId),
+                });
+            }
+            
+            if (prevHabits) {
+                qc.setQueryData(
+                    ["habits", "include-archived"],
+                    prevHabits.map((h:any) => 
+                    h.id === habitId ? { ...h, is_archived: true} : h
+                )
+                );
+            }
 
-            return {previous}
+            return {prevDashboard, prevHabits};
         },
         onError: (_err, _habitId, ctx) => {
-            if (ctx?.previous) qc.setQueryData(["dashboard-today"], ctx.previous);
+            if (ctx?.prevDashboard) {
+                qc.setQueryData(["dashboard-today"], ctx.prevDashboard);
+            }
+            if (ctx?.prevHabits) {
+                qc.setQueryData(["habits", "include-archived"], ctx.prevHabits)
+            }
         },
         onSettled: async () => {
             await qc.invalidateQueries({ queryKey: ["dashboard-today"]});
+            await qc.invalidateQueries({ queryKey: ["habits", "include-archived"]});
         }
     });
 
