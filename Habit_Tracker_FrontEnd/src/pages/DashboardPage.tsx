@@ -3,6 +3,26 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react"
 import { api } from "../lib/api"
 
+type Habit = {
+    id: number;
+    name: string;
+    description: string;
+    goal_type: string;
+    target_per_period: number;
+    start_date: string;
+    is_archived: boolean;
+    created_at: string;
+};
+
+type TodayHabitItem = {
+    habit: { id: number; name: string; description: string; goal_type: string };
+    is_completed: boolean;
+    current_streak: number;
+    best_streak: number;
+}
+
+type DashboardToday = {date: string; habits: TodayHabitItem[] };
+
 export default function DashboardPage() {
     const qc = useQueryClient();
 
@@ -17,22 +37,65 @@ export default function DashboardPage() {
     });
     
     const createHabitMutation = useMutation({
-        mutationFn: (payload: {
-            name: string;
-            description?: string;
-            goal_type: "DAILY" | "WEEKLY" | "X_PER_WEEK";
-            target_per_period: number;
-            start_date: string;
-        }) => api.createHabit(payload),
-        onSuccess: async () => {
-            await qc.invalidateQueries({ queryKey: ["dashboard-today"]})
+        mutationFn: api.createHabit,
+
+        onMutate: async (payload) => {
+            await qc. cancelQueries({queryKey: ["dashboard-today"] });
+
+            const prev = qc.getQueryData<DashboardToday>(["dashboard-today"])
+
+            const tempId = Math.floor(Math.random() * -1_000_000);
+            const optimisticItem: TodayHabitItem = {
+                habit: {
+                    id: tempId,
+                    name: payload.name,
+                    description: payload.description ?? "",
+                    goal_type: payload.goal_type
+                },
+                is_completed: false,
+                current_streak: 0,
+                best_streak: 0,
+            }
+
+            if (prev) {
+                qc.setQueryData<DashboardToday>(["dashboard-today"], {
+                    ...prev,
+                    habits: [optimisticItem, ...prev.habits],
+                });
+            }
+
+            return {prev, tempId}
+        },
+        onError: (_err, _payload, ctx) => {
+            if (ctx?.prev) qc.setQueryData(["dashboard-today"], ctx.prev);
+        },
+        onSuccess: async (_createdHabit, _payload, ctx) => {
+            await qc.invalidateQueries({ queryKey: ["dashboard-today"]});
+            await qc.invalidateQueries({ queryKey: ["habits","include-archived"]});
         },
     });
 
     const logMutation = useMutation({
         mutationFn: ({habitId, date}: {habitId: number; date: string }) => 
             api.createHabitLog(habitId, {date, value: 1 }),
-        onSuccess: async () => {
+        onMutate: async ({ habitId }) => {
+            await qc.cancelQueries({ queryKey: ["dashboard-today"] });
+
+            const prev = qc.getQueryData<DashboardToday>(["dashboard-today"]);
+            if (!prev) return { prev };
+
+            qc.setQueryData<DashboardToday>(["dashboard-today"], {
+                ...prev,
+                habits: prev.habits.map((item) => 
+                    item.habit.id === habitId ? { ...item, is_completed: true} : item
+                ),
+            });
+            return { prev }
+        },
+        onError : (_err, _vars, ctx) => {
+            if (ctx?.prev) qc.setQueryData(["dashboard-today"], ctx.prev);
+        },
+        onSettled: async () => {
             await qc.invalidateQueries({queryKey: ["dashboard-today"] });
         },
     });
@@ -44,22 +107,20 @@ export default function DashboardPage() {
             await qc.cancelQueries({ queryKey: ["dashboard-today"]});
             await qc.cancelQueries({ queryKey: ["habits","include-archived"]});
 
-            const prevDashboard = qc.getQueryData<any>(["dashboard-today"]);
-            const prevHabits = qc.getQueryData<any>(["habits", "include-archived"]);
+            const prevDashboard = qc.getQueryData<DashboardToday>(["dashboard-today"]);
+            const prevHabits = qc.getQueryData<Habit[]>(["habits", "include-archived"]);
 
             if (prevDashboard) {
             qc.setQueryData(["dashboard-today"], {
                 ...prevDashboard,
-                habits: prevDashboard.habits.filter((h:any) => h.habit.id !== habitId),
+                habits: prevDashboard.habits.filter((x) => x.habit.id !== habitId),
                 });
             }
             
             if (prevHabits) {
-                qc.setQueryData(
+                qc.setQueryData<Habit[]>(
                     ["habits", "include-archived"],
-                    prevHabits.map((h:any) => 
-                    h.id === habitId ? { ...h, is_archived: true} : h
-                )
+                    prevHabits.map((h) => (h.id === habitId ? { ...h, is_archived: true} : h))
                 );
             }
 
@@ -81,7 +142,51 @@ export default function DashboardPage() {
 
     const restoreMutation = useMutation({
         mutationFn: (habitId: number) => api.restoreHabit(habitId),
-        onSuccess: async () => {
+
+        onMutate: async (habitId: number) => {
+            await qc.cancelQueries({ queryKey: ["dashboard-today"] });
+            await qc.cancelQueries({ queryKey: ["habits","include-archived"] });
+
+            const prevDashboard = qc.getQueryData<DashboardToday>(["dashboard-today"]);
+            const prevHabits = qc.getQueryData<Habit[]>(["habits","include-archived"]);
+
+            let restored: Habit | undefined;
+            if (prevHabits) {
+                const updated = prevHabits.map((h) => {
+                    if(h.id === habitId) {
+                        restored = { ...h, is_archived: false };
+                        return restored;
+                    }
+                    return h;
+                });
+                qc.setQueryData(["habits", "include-archved"], updated);
+            }
+
+            if (prevDashboard && restored) {
+                const item: TodayHabitItem = {
+                    habit: {
+                        id: restored.id,
+                        name: restored.name,
+                        description: restored.description ?? "",
+                        goal_type: restored.goal_type,
+                    },
+                    is_completed: false,
+                    current_streak: 0,
+                    best_streak: 0,
+                };
+
+                qc.setQueryData<DashboardToday>(["dashboard-today"], {
+                    ...prevDashboard,
+                    habits: [item, ...prevDashboard.habits],
+                });
+            }
+            return { prevDashboard, prevHabits };
+        },
+        onError: (_err, _habitId, ctx) => {
+            if (ctx?.prevDashboard) qc.setQueryData(["dashboard-today"], ctx.prevDashboard);
+            if (ctx?.prevHabits) qc.setQueryData(["habits" , "include-archived"], ctx.prevHabits);
+        },
+        onSettled: async () => {
             await qc.invalidateQueries({ queryKey: ["dashboard-today"]})
             await qc.invalidateQueries({ queryKey: ["habits", "include-archived"]});
         },
@@ -91,8 +196,18 @@ export default function DashboardPage() {
     const [description, setDescription] = useState("");
     const [showArchived, setShowArchived] = useState(false);
 
-    if (isLoading) return <div>Loading dashboard...</div>;
-    if (error) return <pre style={{ color: "crimson", whiteSpace: "pre-wrap"}}>{String(error)}</pre>;
+    if (isLoading) return (<div>
+                                <h2>Today</h2>
+                                <div style={{ opacity: 0.7}}>Loading...</div>
+                                <div style={{ display: "grid", gap: 10, marginTop: 12}}>
+                                    {[1,2,3,].map((i) => (
+                                        <div key={i} style={{ border: "1px solid #eee", borderRadius: 8, padding: 12, opacity: 0.6}}>
+                                            Loading habit...
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>);
+    if (error) return (<div style={{ color: "crimson" }}>Couldn't load dashboard.</div>);
     if (!data) return <div>No data</div>
 
     async function onCreateHabit(e: React.FormEvent) {
