@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react"
 import { api } from "../lib/api"
+import { useToast } from "../components/ToastProvider";
 
 type Habit = {
     id: number;
@@ -35,6 +36,8 @@ export default function DashboardPage() {
         queryKey: ["habits", "include-archived"],
         queryFn: () => api.listHabits(true)
     });
+
+    const { toast } = useToast();
     
     const createHabitMutation = useMutation({
         mutationFn: api.createHabit,
@@ -70,6 +73,7 @@ export default function DashboardPage() {
             if (ctx?.prev) qc.setQueryData(["dashboard-today"], ctx.prev);
         },
         onSuccess: async (_createdHabit, _payload, ctx) => {
+            toast("Habit created");
             await qc.invalidateQueries({ queryKey: ["dashboard-today"]});
             await qc.invalidateQueries({ queryKey: ["habits","include-archived"]});
         },
@@ -135,6 +139,7 @@ export default function DashboardPage() {
             }
         },
         onSettled: async () => {
+            toast("Habit archived");
             await qc.invalidateQueries({ queryKey: ["dashboard-today"]});
             await qc.invalidateQueries({ queryKey: ["habits", "include-archived"]});
         }
@@ -187,6 +192,7 @@ export default function DashboardPage() {
             if (ctx?.prevHabits) qc.setQueryData(["habits" , "include-archived"], ctx.prevHabits);
         },
         onSettled: async () => {
+            toast("Habit restored");
             await qc.invalidateQueries({ queryKey: ["dashboard-today"]})
             await qc.invalidateQueries({ queryKey: ["habits", "include-archived"]});
         },
