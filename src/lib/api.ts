@@ -64,7 +64,7 @@ export const api = {
 
             if (!res.ok) {
                 const text = await res.text();
-                throw new Error(text || `Login failted ${res.status}`);
+                throw new Error(text || `Login failed ${res.status}`);
             }
 
             return res.json() as Promise<{access_token: string; token_type: string}>
