@@ -298,7 +298,7 @@ export default function DashboardPage() {
                             gap: 12
                         }}
                     >
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: "auto" }}>
                             <div style={{ fontWeight: 700}}>{item.habit.name}</div>
                             {item.habit.description && (
                                 <div style={{ opacity: 0.8, fontSize: 14}}>{item.habit.description}</div>
@@ -331,7 +331,7 @@ export default function DashboardPage() {
                     </div>
                 ))}
             </div>
-            
+            {data.habits.length === 0 && <div>No active habits yet.</div>}
             <hr style={{ margin: "20px 0"}}/>
             <button onClick={() => setShowArchived((s) => !s)}>
                 {showArchived ? "Hide archived habits" : "Show archived habits"}    
@@ -357,7 +357,7 @@ export default function DashboardPage() {
                                     opacity: 0.9,
                                 }}
                             >
-                                <div style={{ flex: 1}}>
+                                <div style={{ flex: "auto"}}>
                                     <div style={{ fontWeight: 700}}>{h.name}</div>
                                     {h.description && (
                                         <div style={{ fontSize: 14, opacity: 0.8}}>{h.description}</div>
@@ -374,7 +374,6 @@ export default function DashboardPage() {
                     </div>)}
                 </div>
             )}
-            {data.habits.length === 0 && <div>No active habits yet. Create some via the API for now.</div>}
         </div>
     )
 }

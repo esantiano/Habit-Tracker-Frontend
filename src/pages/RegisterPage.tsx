@@ -8,21 +8,22 @@ export default function RegisterPage() {
         email: "",
         username: "",
         password: "",
-        timezone: "UTC"
+        timezone: ""
     });
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        setError(null);
+        setError("");
         setLoading(true);
         try {
             await api.register(form);
             nav("/login");
         } catch (err: unknown) {
             if (err instanceof Error) {
-                setError(err.message); 
+                const errorObj = JSON.parse(err.message)
+                setError(errorObj.detail); 
             } else {
                 setError(String(err)); 
             }
@@ -33,7 +34,7 @@ export default function RegisterPage() {
 
     return (
         <div>
-            <h2>Register</h2>
+            <h2 className="centered">Register</h2>
             <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
                 <input
                     placeholder="Email"
@@ -57,7 +58,7 @@ export default function RegisterPage() {
                     onChange={(e) => setForm({ ...form, timezone: e.target.value})}
                 />
                 <button disabled={loading}>{loading ? "Creating..." : "Create account"}</button>
-                {error && <pre style={{ color: "crimson", whiteSpace: "pre-wrap"}}>{error}</pre>}
+                {error && <pre style={{ color: "crimson", whiteSpace: "pre-wrap", display: "flex", justifyContent: "center"}}>{error}</pre>}
             </form>
         </div>
     );
