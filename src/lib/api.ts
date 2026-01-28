@@ -124,4 +124,20 @@ export const api = {
 
         restoreHabit: (habitId: number) =>
             request(`/habits/${habitId}/restore`,{ method: "PATCH"}),
+
+        updateHabit: (habitId: number, 
+                        payload: Partial <{
+                            name: string;
+                            description: string;
+                            goal_type: "DAILY" | "X_PER_WEEK";
+                            target_per_period: number;
+                        }>
+        ) => 
+            request(`/habits/${habitId}`, {
+                method: "PATCH",
+                headers: {
+                    'Content-Type' : 'application/json'
+                },
+                body: JSON.stringify(payload)
+            }),
 };

@@ -197,10 +197,26 @@ export default function DashboardPage() {
             await qc.invalidateQueries({ queryKey: ["habits", "include-archived"]});
         },
     });
+
+    const updateHabitMutation = useMutation({
+        mutationFn: ({ habitId, payload}: { habitId: number; payload: any}) => api.updateHabit(habitId, payload),
+        onSuccess: async () => {
+            await qc.invalidateQueries({ queryKey: ["dashboard-today"]});
+            await qc.invalidateQueries({ queryKey: ["habits","include-archived"]});
+        },
+    });
     
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [goalType, setGoalType] = useState<"DAILY" | "X_PER_WEEK">("DAILY");
+    const [timesPerWeek, setTimesPerWeek] = useState(3);
     const [showArchived, setShowArchived] = useState(false);
+
+    const [editingId, setEditingId] = useState<number| null>(null);
+    const [editName, setEditName] = useState("");
+    const [editDescription, setEditDescription] = useState("")
+    const [editGoalType, setEditGoalType] = useState("")
+    const [editTimesPerWeek, setEditTimesPerWeek] = useState(3)
 
     if (isLoading) return (<div>
                                 <h2>Today</h2>
@@ -225,15 +241,23 @@ export default function DashboardPage() {
         createHabitMutation.mutate({
             name: trimmed,
             description: description.trim(),
-            goal_type: "DAILY", 
-            target_per_period: 1,
+            goal_type: goalType, 
+            target_per_period: goalType === "DAILY" ? 1 : timesPerWeek,
             start_date: data.date
         })
 
         setName("")
         setDescription("")
     }
-    
+
+    function startEdit(item: any) {
+        setEditingId(item.habit.id);
+        setEditName(item.habit.name ?? "");
+        setEditDescription(item.habit.description ?? "");
+        setEditGoalType(item.habit.goal_type === "X_PER_WEEK" ? "X_PER_WEEK" : "DAILY");
+        setEditTimesPerWeek(item.habit.target_per_period ?? 3);
+    }
+
     const archived = (allHabits || []).filter((h) => h.is_archived);
     return (
         <div>
@@ -264,9 +288,32 @@ export default function DashboardPage() {
 
                     <div style={{display: "flex", gap: 10, alignItems: "center" }}>
                         <div style={{ fontSize: 13, opacity: 0.8 }}>
-                            Defaults: DAILY · start date {data.date}
+                            Start Date: {data.date}
                         </div>
+                        <div style={{ display: "grid", gap: 8 }}>
+                            <label style={{ fontSize: 14, fontWeight: 600}}>Goal</label>
 
+                            <select 
+                                value={goalType}
+                                onChange={(e) => setGoalType(e.target.value as "DAILY" | "X_PER_WEEK")}
+                            >
+                                <option value="DAILY">Daily</option>
+                                <option value="X_PER_WEEK">X times per week</option>
+                            </select>
+
+                            {goalType === "X_PER_WEEK" && (
+                                <div style={{ display: "flex", alignItems: "center", gap: 8}}>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={7}
+                                        value={timesPerWeek}
+                                        onChange={(e) => setTimesPerWeek(Number(e.target.value))}
+                                        style={{ width: 80 }}
+                                        />
+                                </div>
+                            )}
+                        </div>
                         <button
                             type="submit"
                             disabled={createHabitMutation.isPending || !name.trim()}
@@ -303,10 +350,60 @@ export default function DashboardPage() {
                             {item.habit.description && (
                                 <div style={{ opacity: 0.8, fontSize: 14}}>{item.habit.description}</div>
                             )}
+                            <div style={{ fontSize: 13, opacity: 0.75 }}>
+                                {item.habit.goal_type === "DAILY" ? "Daily" : `${item.habit.target_per_period}x / week`}
+                            </div>
                             <div style={{ fontSize: 13, opacity: 0.8, marginTop: 6}}>
                                 Streak: {item.current_streak} (best {item.best_streak})
                             </div>
                         </div>
+                        
+                        {editingId === item.habit.id && (
+                            <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                                <input value={editName} onChange={(e) => setEditName(e.target.value)}/>
+                                <input value={editDescription} onChange={(e) => setEditDescription(e.target.value)}/>
+
+                                <select
+                                    value={editGoalType}
+                                    onChange={(e) => setEditGoalType(e.target.value as "DAILY" | "X_PER_WEEK")}
+                                >
+                                    <option value="DAILY">Daily</option>
+                                    <option value="X_PER_WEEK">X times per week</option>
+                                </select>
+
+                                {editGoalType === "X_PER_WEEK" && (
+                                    <div style={{ display: "flex", gap: 8, alignItems: "center"}}>
+                                        <input
+                                        type="number"
+                                        min={1}
+                                        max={7}
+                                        value={editTimesPerWeek}
+                                        onChange={(e) => setEditTimesPerWeek(Number(e.target.value))}
+                                        style={{ width: 80}}/>
+                                        <span>times per week</span>
+                                    </div>
+                                )}
+                                <div style={{ display: "flex", gap: 8}}>
+                                    <button
+                                        onClick={() => {
+                                            updateHabitMutation.mutate({
+                                                habitId: item.habit.id,
+                                                payload: {
+                                                    name: editName.trim(),
+                                                    description: editDescription.trim(),
+                                                    goal_type: editGoalType,
+                                                    target_per_period: editGoalType === "DAILY" ? 1 : editTimesPerWeek,
+                                                },
+                                            });
+                                            setEditingId(null)
+                                        }}
+                                        disabled={updateHabitMutation.isPending || editName.trim().length < 3}
+                                    >Save</button>
+
+                                    <button onClick={() => setEditingId(null)} disabled={updateHabitMutation.isPending}>Cancel</button>
+                                </div>
+                            </div>
+                        )}
                         
                         {item.is_completed ? (
                             <span style={{ fontWeight: 700}}>✅ Done</span>
@@ -328,6 +425,8 @@ export default function DashboardPage() {
                         >
                             Archive
                         </button>
+
+                        <button onClick={() => startEdit(item)}>Edit</button>
                     </div>
                 ))}
             </div>
