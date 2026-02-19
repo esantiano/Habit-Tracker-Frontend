@@ -4,11 +4,12 @@ import { api } from "../lib/api";
 
 export default function RegisterPage() {
     const nav = useNavigate();
+    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const [form, setForm] = useState({
         email: "",
         username: "",
         password: "",
-        timezone: ""
+        timezone: browserTz,
     });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
