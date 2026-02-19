@@ -81,8 +81,8 @@ export default function AnalyticsPage () {
                                         <div style={{ fontSize: 12, opacity: 0.7 }}>#{h.habit_id}</div>
                                     </Td>
                                     <Td>{h.goal_type === "DAILY"
-                                        ? "Daily" 
-                                        : `${h.target_per_period} per week`}
+                                        ? `${h.completion_count} days`
+                                        : `${h.completion_count} weeks`}
                                     </Td>
                                     <Td>{h.completion_count}</Td>
                                     <Td>{pct(h.completion_rate)}</Td>
