@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, Link, useNavigate } from "react-router-dom";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
+import AnalyticsPage  from "./pages/AnalyticsPage";
 import { clearToken, getToken } from "./lib/auth";
 import type { JSX } from "react";
 
@@ -22,7 +23,7 @@ export default function App() {
           <Link to="/" style={{ fontWeight: 700, textDecoration: "none"}}>
             Habit Tracker
           </Link>
-          
+          <Link className="centered" to="/analytics">Analytics</Link>
           <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
             {!token ? (
               <>
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />}/>
           <Route path="/dashboard" element={<Protected><DashboardPage/></Protected>}/>
+          <Route path="/analytics" element={<Protected><AnalyticsPage/></Protected>}/>
         </Routes>
       </div>
     </div>

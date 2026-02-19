@@ -71,7 +71,6 @@ export const api = {
         },
 
         me: () => request("/auth/me"),
-
         dashboardToday: () =>
             request<{
                 date: string;
@@ -83,6 +82,26 @@ export const api = {
                 }>;
             }>("/dashboard/today"),
         
+        statsOverview: (range: "7d"|"30d"|"90d" = "30d") => 
+            request<{
+                start_date: string;
+                end_date: string;
+                total_habits: number;
+                active_habits: number;
+                total_checkins: number;
+                overall_completion_rate: number;
+                habits: Array<{
+                    habit_id: number;
+                    name: string;
+                    goal_type: string;
+                    target_per_period: number;
+                    completion_count: number;
+                    completion_rate: number;
+                    current_streak: number;
+                    best_streak: number;
+                }>;
+            }>(`/stats/overview?range=${range}`),
+            
         createHabitLog: (habitId: number, payload: {date: string; value: number }) =>
             request(`/habits/${habitId}/logs`, {
                 method: "POST",
