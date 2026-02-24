@@ -101,7 +101,26 @@ export const api = {
                     best_streak: number;
                 }>;
             }>(`/stats/overview?range=${range}`),
-            
+        
+        heatMap: (range: "7d"|"30d"|"90d"|"180d"|"365d" = "90d") => 
+            request<{
+                start_date: string;
+                end_date: string;
+                days: Array<{
+                    date: string;
+                    count: number;
+                }>
+            }>(`/stats/heatmap?range=${range}`),
+        
+        consistency: (range: "7d"|"30d"|"90d"|"180d"|"365d" = "30d") => 
+            request<{
+                start_date: string;
+                end_date: string;
+                score: number;
+                successful_periods: number;
+                total_periods: number;
+            }>(`/stats/consistency?range=${range}`),
+
         createHabitLog: (habitId: number, payload: {date: string; value: number }) =>
             request(`/habits/${habitId}/logs`, {
                 method: "POST",

@@ -17,7 +17,7 @@ export default function App() {
   const token = getToken();
 
   return (
-    <div style={{ minHeight: "100vh"}}>
+    <div style={{ maxHeight: "90vh"}}>
       <div style={{ maxWidth: "720px", margin: "0 auto", padding: "20px 16px"}}>
         <header style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16}}>
           <Link to="/" style={{ fontWeight: 700, textDecoration: "none"}}>

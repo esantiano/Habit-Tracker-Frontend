@@ -1,6 +1,7 @@
 import {  useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react"
 import { api } from "../lib/api"
+import Heatmap from "../components/Heatmap";
 
 function pct(x: number) {
     return `${Math.round(x*100)}%`;
@@ -12,6 +13,16 @@ export default function AnalyticsPage () {
         queryKey: ["stats-overview", range],
         queryFn: () => api.statsOverview(range),
     });
+    
+    const { data: consistency } = useQuery({
+        queryKey: ["consistency", range],
+        queryFn: () => api.consistency(range),
+    })
+
+    const { data: heatmap} = useQuery({
+        queryKey: ["heatmap", "365d"],
+        queryFn: () => api.heatMap("365d"),
+    })
 
     const rows = useMemo(() => {
         if (!data) return [];
@@ -52,6 +63,7 @@ export default function AnalyticsPage () {
                     <Card title="Overall completion" value={pct(data.overall_completion_rate)} />
                     <Card title="Active habits" value={String(data.active_habits)} />
                     <Card title="Total check-ins" value={String(data.total_checkins)} />
+                    <Card title="Consistency score" value={consistency ? `${Math.round(consistency.score)}%` : "-"} />
             </div>
 
             {/* Habit table */}
@@ -101,6 +113,9 @@ export default function AnalyticsPage () {
                     </table>
                 </div>
             </div>
+
+            {/* Heatmap */}
+            {heatmap && <Heatmap days={heatmap.days} /> }
             <div style={{ fontSize: 12, opacity: 0.7 }}>
                 Note: overall completion rate reflects daily habits (weekly habits show per-habit weekly rate).
             </div>
