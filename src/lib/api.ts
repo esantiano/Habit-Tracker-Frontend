@@ -75,7 +75,7 @@ export const api = {
             request<{
                 date: string;
                 habits: Array<{
-                    habit: {id: number; name: string; description: string; goal_type: string };
+                    habit: {id: number; name: string; description: string; goal_type: string; target_per_period: number; };
                     is_completed: boolean;
                     current_streak: number;
                     best_streak: number;

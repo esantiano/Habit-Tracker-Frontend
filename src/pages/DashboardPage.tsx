@@ -38,7 +38,7 @@ export default function DashboardPage() {
     });
 
     const { toast } = useToast();
-    
+    const today = data?.date ?? "";
     const createHabitMutation = useMutation({
         mutationFn: api.createHabit,
 
@@ -72,7 +72,7 @@ export default function DashboardPage() {
         onError: (_err, _payload, ctx) => {
             if (ctx?.prev) qc.setQueryData(["dashboard-today"], ctx.prev);
         },
-        onSuccess: async (_createdHabit, _payload, ctx) => {
+        onSuccess: async (_createdHabit, _payload) => {
             toast("Habit created");
             await qc.invalidateQueries({ queryKey: ["dashboard-today"]});
             await qc.invalidateQueries({ queryKey: ["habits","include-archived"]});
@@ -243,7 +243,7 @@ export default function DashboardPage() {
             description: description.trim(),
             goal_type: goalType, 
             target_per_period: goalType === "DAILY" ? 1 : timesPerWeek,
-            start_date: data.date
+            start_date: today,
         })
 
         setName("")
@@ -262,7 +262,7 @@ export default function DashboardPage() {
     return (
         <div>
             <h2>Today</h2>
-            <div style={{ opacity: 0.8, marginBottom: 12}}>{data.date}</div>
+            <div style={{ opacity: 0.8, marginBottom: 12}}>{today}</div>
             
             {/* Create Habit Form */}
             <div
@@ -288,7 +288,7 @@ export default function DashboardPage() {
 
                     <div style={{display: "flex", gap: 10, alignItems: "center" }}>
                         <div style={{ fontSize: 13, opacity: 0.8 }}>
-                            Start Date: {data.date}
+                            Start Date: {today}
                         </div>
                         <div style={{ display: "grid", gap: 8 }}>
                             <label style={{ fontSize: 14, fontWeight: 600}}>Goal</label>
@@ -409,7 +409,7 @@ export default function DashboardPage() {
                             <span style={{ fontWeight: 700}}>✅ Done</span>
                         ) : ( 
                             <button
-                                onClick={() => logMutation.mutate({ habitId: item.habit.id, date: data.date })}
+                                onClick={() => logMutation.mutate({ habitId: item.habit.id, date: today })}
                                 disabled={logMutation.isPending}>
                                     Mark done
                             </button>
