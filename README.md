@@ -71,3 +71,63 @@ export default defineConfig([
   },
 ])
 ```
+
+## Overview
+
+This repository contains the frontend for Habit Tracker.
+
+It provides:
+
+- Authentication (JWT-based)
+- Dashboard view
+- Habit creation/editing
+- Archive/restore
+- Analytics dashboard
+- GitHub-style heatmap
+- Optimistic UI updates
+- Toast notifications
+
+---
+
+## Tech Stack
+
+- React
+- TypeScript
+- Vite
+- React Query
+- Custom heatmap component
+
+---
+
+## Features
+
+### Dashboard
+
+- Create daily or weekly habits
+- Mark completion
+- View streaks
+- Archive / restore
+
+### Analytics
+
+- Overall completion rate
+- Per-habit completion rate
+- Consistency score
+- GitHub-style activity heatmap
+
+---
+
+## Environment Setup
+
+Create `.env`:
+
+```
+VITE_API_URL=https://habit-tracker-backend-lively-sun-6272.fly.dev
+```
+
+Install + run:
+
+```
+npm install
+npm run dev
+```
