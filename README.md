@@ -118,16 +118,35 @@ It provides:
 ---
 
 ## Environment Setup
+Before running setting up this project you should have Habit-Tracker-Backend installed and running.
+## Cloning the repo and navigating through your terminal
+From your IDE's terminal use the commands below
+```
+git clone https://github.com/esantiano/Habit-Tracker-Frontend.git
+cd Habit-Tracker-Frontend
+```
+Within your IDE open the Habit-Tracker-Backend folder
+## Create .env:
+For mac or linux run the following in your terminal
+```
+touch .env
+```
+For windows 
+```
+New-Item .env
+```
 
-Create `.env`:
+Set the VITE_API_URL locally use the port running Habit-Tracker-Backend.
 
 ```
-VITE_API_URL=https://habit-tracker-backend-lively-sun-6272.fly.dev
+VITE_API_URL=http://127.0.0.1:(port-number)
 ```
-
-Install + run:
-
+##  Install and Running the project
+Install dependent packages to run the front end locally.
 ```
 npm install
+```
+Run the project.
+```
 npm run dev
 ```
