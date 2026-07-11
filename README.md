@@ -117,10 +117,11 @@ It provides:
 
 ---
 
-## Environment Setup
+## Required software
 This project uses node.js https://www.nvmnode.com/guide/download.html
 and node version manager https://nodejs.org/en/download.
-Before setting up this project you should have Habit-Tracker-Backend installed and running.
+
+
 ## Cloning the repo and navigating through your terminal
 From your IDE's terminal use the commands below
 ```
@@ -148,7 +149,7 @@ Install dependent packages to run the front end locally.
 ```
 npm install
 ```
-Run the project.
+Before running this project you should have Habit-Tracker-Backend installed and running. Run the project.
 ```
 npm run dev
 ```
