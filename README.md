@@ -116,25 +116,30 @@ It provides:
 - GitHub-style activity heatmap
 
 ---
+# Local Development Setup
 
-## Required software
-This project uses node.js https://www.nvmnode.com/guide/download.html
-and node version manager https://nodejs.org/en/download.
+## Prerequisites
+This project requires the latest version of node.js and Node Version Manager to run Locally.
+
+https://nodejs.org/en/download
+
+https://www.nvmnode.com/guide/download.html
 
 
-## Cloning the repo and navigating through your terminal
-From your IDE's terminal use the commands below
+
+## 1. Clone the Repository
 ```
 git clone https://github.com/esantiano/Habit-Tracker-Frontend.git
 cd Habit-Tracker-Frontend
 ```
-Within your IDE open the Habit-Tracker-Backend folder
-## Create .env:
-For mac or linux run the following in your terminal
+## 2. Configure Environment Variables
+Create a ```.env``` file in the project root
+
+For macOS or Linux
 ```
 touch .env
 ```
-For windows 
+For Windows 
 ```
 New-Item .env
 ```
@@ -142,14 +147,32 @@ New-Item .env
 Set the VITE_API_URL locally use the port running Habit-Tracker-Backend.
 
 ```
-VITE_API_URL=http://127.0.0.1:(port-number)
+VITE_API_URL=http://127.0.0.1:<backend-port>
 ```
-##  Install and Running the project
-Install dependent packages to run the front end locally.
+
+The backend server must be running before starting the frontend application. 
+
+Replace ```<backend-port>``` with the port where the Habit-Tracker-Backend is running. 
+
+For example: 
+```
+VITE_API_URL=http://127.0.0.1:8000
+```
+
+##  3. Install Dependencies
 ```
 npm install
 ```
-Before running this project you should have Habit-Tracker-Backend installed and running. Run the project.
+## 4. Start the Development Server
+Start the Vite development server: 
 ```
 npm run dev
 ```
+This application will typically be available at: 
+http://127.0.0.1:5173
+
+If port 5173 is already in use, Vite will automatically select another available port and display it in the terminal.
+
+Stop the development server by pressing:
+
+Ctrl + C
