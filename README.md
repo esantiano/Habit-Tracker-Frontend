@@ -125,14 +125,7 @@ https://nodejs.org/en/download
 
 https://www.nvmnode.com/guide/download.html
 
-
-
-## 1. Clone the Repository
-```
-git clone https://github.com/esantiano/Habit-Tracker-Frontend.git
-cd Habit-Tracker-Frontend
-```
-## 2. Configure Environment Variables
+## 1. Configure Environment Variables
 Create a ```.env``` file in the project root
 
 For macOS or Linux
@@ -159,11 +152,11 @@ For example:
 VITE_API_URL=http://127.0.0.1:8000
 ```
 
-##  3. Install Dependencies
+## 2. Install Dependencies
 ```
 npm install
 ```
-## 4. Start the Development Server
+## 3. Start the Development Server
 Start the Vite development server: 
 ```
 npm run dev
