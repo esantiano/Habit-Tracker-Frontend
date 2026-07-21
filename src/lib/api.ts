@@ -59,7 +59,7 @@ export const api = {
             const res = await fetch(`${API_URL}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded"},
-                body: form.toString(),
+                body: form,
             });
 
             if (!res.ok) {
