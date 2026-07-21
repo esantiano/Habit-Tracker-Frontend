@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
+import { setToken } from "../lib/auth";
+
+
 
 export default function RegisterPage() {
     const nav = useNavigate();
@@ -13,14 +16,30 @@ export default function RegisterPage() {
     });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-
+    
+    interface registrationResponse {
+        id: number;
+        email: string;
+        timezone: string;
+        created_at: string
+    }
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError("");
         setLoading(true);
         try {
-            await api.register(form);
-            nav("/login");
+            const regResponse = await api.register(form);
+            const user = regResponse as registrationResponse;
+            if (user.id != null && user.id >= 0){
+                const username = form.username;
+                const password = form.password;
+                const loginResponse = await api.login({username, password})
+                if (loginResponse.access_token != "")
+                {
+                    setToken(loginResponse.access_token);
+                    nav("/dashboard");
+                }
+            }
         } catch (err: unknown) {
             if (err instanceof Error) {
                 const errorObj = JSON.parse(err.message)
