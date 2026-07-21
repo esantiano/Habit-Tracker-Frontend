@@ -20,10 +20,14 @@ export default function App() {
     <div style={{ maxHeight: "90vh"}}>
       <div style={{ maxWidth: "720px", margin: "0 auto", padding: "20px 16px"}}>
         <header style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16}}>
-          <Link to="/" style={{ fontWeight: 700, textDecoration: "none"}}>
-            Habit Tracker
-          </Link>
-          <Link className="centered" to="/analytics">Analytics</Link>
+          {token? (
+            <>
+            <Link to="/" style={{ fontWeight: 700, textDecoration: "none"}}>Habits</Link>
+            <Link className="centered" to="/analytics">Analytics</Link>
+          </>
+          ) : (
+            <div>Habit Tracker</div>
+          )}
           <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
             {!token ? (
               <>
